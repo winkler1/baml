@@ -27,8 +27,7 @@ pub enum Flag {
     FirstMatch(usize, Vec<Result<BamlValueWithFlags, ParsingError>>),
     UnionMatch(usize, Vec<Result<BamlValueWithFlags, ParsingError>>),
 
-    /// `[(value, count)]`
-    StrMatchOneFromMany(Vec<(String, usize)>),
+    StrMatchOneFromMany(Vec<(usize, String)>),
 
     DefaultFromNoValue,
     DefaultButHadValue(crate::jsonish::Value),
@@ -178,8 +177,8 @@ impl std::fmt::Display for Flag {
             }
             Flag::StrMatchOneFromMany(values) => {
                 write!(f, "Enum one from many: ")?;
-                for (value, count) in values {
-                    writeln!(f, "Item {value}: {count}")?;
+                for (idx, value) in values {
+                    writeln!(f, "Item {}: {}", idx, value)?;
                 }
             }
             Flag::DefaultButHadUnparseableValue(value) => {
