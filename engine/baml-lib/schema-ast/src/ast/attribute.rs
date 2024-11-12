@@ -3,7 +3,7 @@ use std::ops::Index;
 
 /// An attribute (following `@` or `@@``) on a model, model field, enum, enum value or composite
 /// type field.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Attribute {
     /// The name of the attribute:
     ///
@@ -36,8 +36,7 @@ impl Attribute {
     pub fn assert_eq_up_to_span(&self, other: &Attribute) {
         assert_eq!(self.name.to_string(), other.name.to_string());
         assert_eq!(self.parenthesized, other.parenthesized);
-        self
-            .arguments
+        self.arguments
             .iter()
             .zip(other.arguments.iter())
             .for_each(|(arg1, arg2)| {

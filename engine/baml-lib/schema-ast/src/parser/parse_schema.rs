@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use super::{
-    parse_template_string::parse_template_string,
+    parse_assignment::parse_assignment, parse_template_string::parse_template_string,
     parse_type_expression_block::parse_type_expression_block,
     parse_value_expression_block::parse_value_expression_block, BAMLParser, Rule,
 };
@@ -87,6 +87,10 @@ pub fn parse_schema(
                             Err(e) => diagnostics.push_error(e),
                         }
                     }
+                    Rule::type_alias => {
+                        let _assignment = parse_assignment(current, &mut diagnostics);
+                        // top_level_definitions.push(Top::TypeAlias(assignment));
+                    }
 
                     Rule::template_declaration => {
                         match parse_template_string(
@@ -122,7 +126,6 @@ pub fn parse_schema(
                     }
                     // We do nothing here.
                     Rule::raw_string_literal => (),
-                    Rule::type_alias => (), // TODO: Store aliases
                     Rule::empty_lines => (),
                     _ => unreachable!("Encountered an unknown rule: {:?}", current.as_rule()),
                 }

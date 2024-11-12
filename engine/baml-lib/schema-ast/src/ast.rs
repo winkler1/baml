@@ -1,4 +1,5 @@
 mod argument;
+mod assignment;
 mod attribute;
 
 mod comment;
@@ -18,7 +19,8 @@ mod type_expression_block;
 mod value_expression_block;
 pub(crate) use self::comment::Comment;
 
-pub use argument::{ArgumentId, Argument, ArgumentsList};
+pub use argument::{Argument, ArgumentId, ArgumentsList};
+pub use assignment::Assignment;
 pub use attribute::{Attribute, AttributeContainer, AttributeId};
 pub use config::ConfigBlockProperty;
 pub use expression::{Expression, RawString};
@@ -31,9 +33,7 @@ pub use template_string::TemplateString;
 pub use top::Top;
 pub use traits::{WithAttributes, WithDocumentation, WithIdentifier, WithName, WithSpan};
 pub use type_expression_block::{FieldId, SubType, TypeExpressionBlock};
-pub use value_expression_block::{
-    BlockArg, BlockArgs, ValueExprBlock, ValueExprBlockType,
-};
+pub use value_expression_block::{BlockArg, BlockArgs, ValueExprBlock, ValueExprBlockType};
 
 /// AST representation of a prisma schema.
 ///
@@ -234,6 +234,7 @@ fn top_idx_to_top_id(top_idx: usize, top: &Top) -> TopId {
         Top::Enum(_) => TopId::Enum(TypeExpId(top_idx as u32)),
         Top::Class(_) => TopId::Class(TypeExpId(top_idx as u32)),
         Top::Function(_) => TopId::Function(ValExpId(top_idx as u32)),
+        Top::TypeAlias(_) => todo!(),
         Top::Client(_) => TopId::Client(ValExpId(top_idx as u32)),
         Top::TemplateString(_) => TopId::TemplateString(TemplateStringId(top_idx as u32)),
         Top::Generator(_) => TopId::Generator(ValExpId(top_idx as u32)),

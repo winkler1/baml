@@ -2,7 +2,8 @@ use baml_types::{LiteralValue, TypeValue};
 use internal_baml_diagnostics::DatamodelError;
 
 use super::{
-    traits::WithAttributes, Attribute, Comment, Identifier, SchemaAst, Span, WithDocumentation, WithIdentifier, WithName, WithSpan
+    traits::WithAttributes, Attribute, Comment, Identifier, SchemaAst, Span, WithDocumentation,
+    WithIdentifier, WithName, WithSpan,
 };
 
 /// A field definition in a model or a composite type.
@@ -108,7 +109,7 @@ impl FieldArity {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum FieldType {
     Symbol(FieldArity, Identifier, Option<Vec<Attribute>>),
     Primitive(FieldArity, TypeValue, Span, Option<Vec<Attribute>>),
@@ -257,7 +258,9 @@ impl FieldType {
     }
 
     pub fn has_checks(&self) -> bool {
-        self.attributes().iter().any(|Attribute{name,..}| name.to_string().as_str() == "check")
+        self.attributes()
+            .iter()
+            .any(|Attribute { name, .. }| name.to_string().as_str() == "check")
     }
 
     pub fn assert_eq_up_to_span(&self, other: &Self) {

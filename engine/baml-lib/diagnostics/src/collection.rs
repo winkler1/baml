@@ -44,8 +44,12 @@ impl Diagnostics {
     }
 
     pub fn span(&self, p: pest::Span<'_>) -> Span {
+        self.span_from(p.start(), p.end())
+    }
+
+    pub fn span_from(&self, start: usize, end: usize) -> Span {
         match self.current_file {
-            Some(ref file) => Span::new(file.clone(), p.start(), p.end()),
+            Some(ref file) => Span::new(file.clone(), start, end),
             None => panic!("No current file set."),
         }
     }
