@@ -77,17 +77,13 @@ pub fn parse_schema(
                             &mut diagnostics,
                         );
                         match val_expr {
-                            Ok(val) => {
-                                if let Some(top) = match val.block_type {
-                                    ValueExprBlockType::Function => Some(Top::Function(val)),
-                                    ValueExprBlockType::Test => Some(Top::TestCase(val)),
-                                    ValueExprBlockType::Client => Some(Top::Client(val)),
-                                    ValueExprBlockType::RetryPolicy => Some(Top::RetryPolicy(val)),
-                                    ValueExprBlockType::Generator => Some(Top::Generator(val)),
-                                } {
-                                    top_level_definitions.push(top);
-                                }
-                            }
+                            Ok(val) => top_level_definitions.push(match val.block_type {
+                                ValueExprBlockType::Function => Top::Function(val),
+                                ValueExprBlockType::Test => Top::TestCase(val),
+                                ValueExprBlockType::Client => Top::Client(val),
+                                ValueExprBlockType::RetryPolicy => Top::RetryPolicy(val),
+                                ValueExprBlockType::Generator => Top::Generator(val),
+                            }),
                             Err(e) => diagnostics.push_error(e),
                         }
                     }
@@ -126,6 +122,7 @@ pub fn parse_schema(
                     }
                     // We do nothing here.
                     Rule::raw_string_literal => (),
+                    Rule::type_alias => (), // TODO: Store aliases
                     Rule::empty_lines => (),
                     _ => unreachable!("Encountered an unknown rule: {:?}", current.as_rule()),
                 }
