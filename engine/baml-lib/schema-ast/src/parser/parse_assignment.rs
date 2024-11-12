@@ -18,16 +18,19 @@ pub(crate) fn parse_assignment(pair: Pair<'_>, diagnostics: &mut Diagnostics) ->
 
     let span = pair.as_span();
 
-    let mut is_type_keyword = false;
+    let mut consumed_definition_keyword = false;
+
     let mut identifier: Option<Identifier> = None;
     let mut field_type: Option<FieldType> = None;
 
     for current in pair.into_inner() {
         match current.as_rule() {
             Rule::identifier => {
-                if !is_type_keyword {
+                if !consumed_definition_keyword {
+                    consumed_definition_keyword = true;
                     match current.as_str() {
-                        "type" => is_type_keyword = true,
+                        "type" => {} // Ok, type alias.
+
                         other => diagnostics.push_error(DatamodelError::new_validation_error(
                             &format!("Unexpected keyword used in assignment: {other}"),
                             diagnostics.span(current.as_span()),
