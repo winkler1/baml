@@ -23,7 +23,7 @@ impl std::ops::Index<FieldId> for TypeExpressionBlock {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum SubType {
     Enum,
     Class,
@@ -31,7 +31,7 @@ pub enum SubType {
 }
 
 /// A class or enum declaration.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TypeExpressionBlock {
     /// The name of the class or enum.
     ///

@@ -132,25 +132,28 @@ impl std::ops::Index<TemplateStringId> for SchemaAst {
 /// syntax to resolve the id to an `ast::Top`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum TopId {
-    /// An enum declaration
+    /// An enum declaration.
     Enum(TypeExpId),
 
-    // A class declaration
+    /// A class declaration.
     Class(TypeExpId),
 
-    // A function declaration
+    /// A function declaration.
     Function(ValExpId),
 
-    // A client declaration
+    /// A type alias declaration.
+    TypeAlias(TypeExpId),
+
+    /// A client declaration.
     Client(ValExpId),
 
-    // A generator declaration
+    /// A generator declaration.
     Generator(ValExpId),
 
-    // Template Strings
+    /// Template Strings.
     TemplateString(TemplateStringId),
 
-    // A config block
+    /// A config block.
     TestCase(ValExpId),
 
     RetryPolicy(ValExpId),
@@ -217,6 +220,7 @@ impl std::ops::Index<TopId> for SchemaAst {
         let idx = match index {
             TopId::Enum(TypeExpId(idx)) => idx,
             TopId::Class(TypeExpId(idx)) => idx,
+            TopId::TypeAlias(TypeExpId(idx)) => idx,
             TopId::Function(ValExpId(idx)) => idx,
             TopId::TemplateString(TemplateStringId(idx)) => idx,
             TopId::Client(ValExpId(idx)) => idx,
@@ -234,7 +238,7 @@ fn top_idx_to_top_id(top_idx: usize, top: &Top) -> TopId {
         Top::Enum(_) => TopId::Enum(TypeExpId(top_idx as u32)),
         Top::Class(_) => TopId::Class(TypeExpId(top_idx as u32)),
         Top::Function(_) => TopId::Function(ValExpId(top_idx as u32)),
-        Top::TypeAlias(_) => todo!(),
+        Top::TypeAlias(_) => TopId::TypeAlias(TypeExpId(top_idx as u32)),
         Top::Client(_) => TopId::Client(ValExpId(top_idx as u32)),
         Top::TemplateString(_) => TopId::TemplateString(TemplateStringId(top_idx as u32)),
         Top::Generator(_) => TopId::Generator(ValExpId(top_idx as u32)),

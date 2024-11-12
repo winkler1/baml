@@ -7,7 +7,7 @@ use super::{
 };
 
 /// A field definition in a model or a composite type.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Field<T> {
     /// The field's type.
     ///

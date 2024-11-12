@@ -4,7 +4,7 @@ use super::{
 };
 
 /// A model declaration.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TemplateString {
     /// The name of the variable.
     ///

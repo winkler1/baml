@@ -47,7 +47,7 @@ pub(crate) fn parse_assignment(pair: Pair<'_>, diagnostics: &mut Diagnostics) ->
 
             Rule::field_type => field_type = parse_field_type(current, diagnostics),
 
-            _ => todo!(),
+            _ => parsing_catch_all(current, "type_alias"),
         }
     }
 

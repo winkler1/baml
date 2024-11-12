@@ -4,7 +4,7 @@ use super::{
 };
 
 /// Enum for distinguishing between top-level entries
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Top {
     /// An enum declaration.
     Enum(TypeExpressionBlock),
@@ -81,7 +81,7 @@ impl WithIdentifier for Top {
             Top::Enum(x) => x.identifier(),
             Top::Class(x) => x.identifier(),
             Top::Function(x) => x.identifier(),
-            Top::TypeAlias(_) => todo!(),
+            Top::TypeAlias(x) => x.identifier(),
             Top::Client(x) => x.identifier(),
             Top::TemplateString(x) => x.identifier(),
             Top::Generator(x) => x.identifier(),

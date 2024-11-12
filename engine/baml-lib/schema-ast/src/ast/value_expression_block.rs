@@ -1,8 +1,8 @@
+use super::argument::ArgumentId;
 use super::{
     traits::WithAttributes, Attribute, Comment, Expression, Field, FieldType, Identifier, Span,
     WithDocumentation, WithIdentifier, WithSpan,
 };
-use super::argument::ArgumentId;
 use std::fmt::Display;
 use std::fmt::Formatter;
 
@@ -43,7 +43,7 @@ impl std::ops::Index<ArgumentId> for BlockArg {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct BlockArg {
     /// The field's type.
     pub field_type: FieldType,
@@ -57,14 +57,14 @@ impl BlockArg {
         self.field_type.name()
     }
 }
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct BlockArgs {
     pub(crate) documentation: Option<Comment>,
     pub args: Vec<(Identifier, BlockArg)>,
     pub(crate) span: Span,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ValueExprBlockType {
     Function,
     Client,
@@ -108,7 +108,7 @@ impl BlockArgs {
 
 /// A block declaration.
 /// A complete Function, Client, Generator, Test, or RetryPolicy.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ValueExprBlock {
     /// The name of the block.
     ///

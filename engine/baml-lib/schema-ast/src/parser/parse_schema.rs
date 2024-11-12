@@ -88,8 +88,8 @@ pub fn parse_schema(
                         }
                     }
                     Rule::type_alias => {
-                        let _assignment = parse_assignment(current, &mut diagnostics);
-                        // top_level_definitions.push(Top::TypeAlias(assignment));
+                        let assignment = parse_assignment(current, &mut diagnostics);
+                        top_level_definitions.push(Top::TypeAlias(assignment));
                     }
 
                     Rule::template_declaration => {
@@ -165,11 +165,24 @@ pub fn parse_schema(
     }
 }
 
+fn get_expected_from_error(positives: &[Rule]) -> String {
+    use std::fmt::Write as _;
+    let mut out = String::with_capacity(positives.len() * 6);
+
+    for positive in positives {
+        write!(out, "{positive:?}").unwrap();
+    }
+
+    out
+}
+
 #[cfg(test)]
 mod tests {
 
     use super::parse_schema;
-    use crate::ast::*; // Add this line to import the ast module
+    use crate::ast::*;
+    use baml_types::TypeValue;
+    // Add this line to import the ast module
     use internal_baml_diagnostics::SourceFile;
 
     #[test]
@@ -244,15 +257,52 @@ mod tests {
         let result = parse_schema(&root_path.into(), &source).unwrap();
         assert_eq!(result.1.errors().len(), 0);
     }
-}
 
-fn get_expected_from_error(positives: &[Rule]) -> String {
-    use std::fmt::Write as _;
-    let mut out = String::with_capacity(positives.len() * 6);
+    #[test]
+    fn test_push_type_aliases() {
+        let input = "type One = int\ntype Two = string | One";
 
-    for positive in positives {
-        write!(out, "{positive:?}").unwrap();
+        let root_path = "example_file.baml";
+        let source = SourceFile::new_static(root_path.into(), input);
+
+        let (ast, diagnostics) = parse_schema(&root_path.into(), &source).unwrap();
+
+        assert_eq!(
+            ast.tops,
+            vec![
+                Top::TypeAlias(Assignment {
+                    identifier: Identifier::Local("One".into(), diagnostics.span_from(5, 8)),
+                    value: FieldType::Primitive(
+                        FieldArity::Required,
+                        TypeValue::Int,
+                        diagnostics.span_from(11, 14),
+                        None
+                    ),
+                    span: diagnostics.span_from(0, 14),
+                }),
+                Top::TypeAlias(Assignment {
+                    identifier: Identifier::Local("Two".into(), diagnostics.span_from(20, 23)),
+                    value: FieldType::Union(
+                        FieldArity::Required,
+                        vec![
+                            FieldType::Primitive(
+                                FieldArity::Required,
+                                TypeValue::String,
+                                diagnostics.span_from(26, 32),
+                                Some(vec![]),
+                            ),
+                            FieldType::Symbol(
+                                FieldArity::Required,
+                                Identifier::Local("One".into(), diagnostics.span_from(35, 38)),
+                                Some(vec![]),
+                            )
+                        ],
+                        diagnostics.span_from(26, 38),
+                        Some(vec![]),
+                    ),
+                    span: diagnostics.span_from(15, 38),
+                })
+            ]
+        )
     }
-
-    out
 }
