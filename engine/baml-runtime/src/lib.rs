@@ -32,6 +32,7 @@ use anyhow::Result;
 
 use baml_types::BamlMap;
 use baml_types::BamlValue;
+use baml_types::Constraint;
 use cfg_if::cfg_if;
 use client_registry::ClientRegistry;
 use indexmap::IndexMap;
@@ -39,6 +40,7 @@ use internal_baml_core::configuration::CloudProject;
 use internal_baml_core::configuration::CodegenGenerator;
 use internal_baml_core::configuration::Generator;
 use internal_baml_core::configuration::GeneratorOutputType;
+use internal_baml_core::ir::jinja_helpers::evaluate_test_result;
 use on_log_event::LogEventCallbackSync;
 use runtime::InternalBamlRuntime;
 use std::sync::OnceLock;
@@ -186,13 +188,15 @@ impl BamlRuntime {
 }
 
 impl BamlRuntime {
-    pub fn get_test_params(
+    pub fn get_test_params_and_constraints(
         &self,
         function_name: &str,
         test_name: &str,
         ctx: &RuntimeContext,
-    ) -> Result<BamlMap<String, BamlValue>> {
-        self.inner.get_test_params(function_name, test_name, ctx)
+    ) -> Result<(BamlMap<String, BamlValue>, Vec<Constraint>)> {
+        let params = self.inner.get_test_params(function_name, test_name, ctx)?;
+        let constraints = self.inner.get_test_constraints(function_name, test_name, &ctx)?;
+        Ok ((params,constraints))
     }
 
     pub async fn run_test<F>(
@@ -209,9 +213,9 @@ impl BamlRuntime {
 
         let response = match ctx.create_ctx(None, None) {
             Ok(rctx) => {
-                let params = self.get_test_params(function_name, test_name, &rctx);
-                match params {
-                    Ok(params) => match ctx.create_ctx(None, None) {
+                let params_and_constraints = self.get_test_params_and_constraints(function_name, test_name, &rctx);
+                match params_and_constraints {
+                    Ok((params, constraints)) => match ctx.create_ctx(None, None) {
                         Ok(rctx_stream) => {
                             let stream = self.inner.stream_function_impl(
                                 function_name.into(),
@@ -225,10 +229,23 @@ impl BamlRuntime {
                                 Ok(mut stream) => {
                                     let (response, span) =
                                         stream.run(on_event, ctx, None, None).await;
-                                    response.map(|res| TestResponse {
-                                        function_response: res,
-                                        function_span: span,
-                                    })
+                                    response.and_then(|res| {
+                                            let maybe_constraint_results: Result<Vec<(Constraint, bool)>> = constraints.iter().map(|constraint| {
+                                                evaluate_test_result(res.parsed().map_meta(|_| ()), constraint.expression)
+                                            }).collect();
+                                            match maybe_constraint_results {
+                                                Err(e) => Err(e),
+                                                Ok(constraint_results) => {
+                                                    let mut first_failed_assert = None;
+
+                                                    Ok(TestResponse {
+                                                        function_response: res,
+                                                        function_span: span,
+                                                    })
+                                                }
+                                            }
+                                        }
+                                    )
                                 }
                                 Err(e) => Err(e),
                             }

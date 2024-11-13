@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use baml_types::{BamlValue, JinjaExpression};
+use baml_types::{BamlValue, BamlValueWithMeta, JinjaExpression};
 use regex::Regex;
 
 pub fn get_env<'a>() -> minijinja::Environment<'a> {
@@ -45,6 +45,20 @@ pub fn evaluate_predicate(
         "true" => Ok(true),
         "false" => Ok(false),
         _ => Err(anyhow::anyhow!("Predicate did not evaluate to a boolean")),
+    }
+}
+
+pub fn evaluate_test_result(
+    result: &BamlValueWithMeta<()>,
+    predicate_expression: &JinjaExpression,
+) -> Result<bool, anyhow::Error> {
+    let result: BamlValue = result.into();
+    let ctx: HashMap<String, BamlValue> =
+        [("result".to_string(), result.clone())].into_iter().collect();
+    match render_expression(&predicate_expression, &ctx)?.as_ref() {
+        "true" => Ok(true),
+        "false" => Ok(false),
+        _ => Err(anyhow::anyhow!("Predicated did not evaluate to a boolean"))
     }
 }
 
