@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+use super::TypeWalker;
 use super::{field::FieldWalker, EnumWalker};
 use crate::types::Attributes;
 use baml_types::Constraint;
@@ -42,9 +43,8 @@ impl<'db> ClassWalker<'db> {
         self.db.types.class_dependencies[&self.class_id()]
             .iter()
             .filter_map(|f| match self.db.find_type_by_str(f) {
-                Some(Either::Left(_cls)) => None,
-                Some(Either::Right(walker)) => Some(walker),
-                None => None,
+                Some(TypeWalker::Enum(walker)) => Some(walker),
+                _ => None,
             })
     }
 
@@ -53,9 +53,8 @@ impl<'db> ClassWalker<'db> {
         self.db.types.class_dependencies[&self.class_id()]
             .iter()
             .filter_map(|f| match self.db.find_type_by_str(f) {
-                Some(Either::Left(walker)) => Some(walker),
-                Some(Either::Right(_enm)) => None,
-                None => None,
+                Some(TypeWalker::Class(walker)) => Some(walker),
+                _ => None,
             })
     }
 
@@ -92,7 +91,8 @@ impl<'db> ClassWalker<'db> {
 
     /// Get the constraints of a class or an enum.
     pub fn get_constraints(&self, sub_type: SubType) -> Option<Vec<Constraint>> {
-        self.get_default_attributes(sub_type).map(|attrs| attrs.constraints.clone())
+        self.get_default_attributes(sub_type)
+            .map(|attrs| attrs.constraints.clone())
     }
 
     /// Arguments of the function.
@@ -166,9 +166,8 @@ impl<'db> ArgWalker<'db> {
         input
             .iter()
             .filter_map(|f| match self.db.find_type_by_str(f) {
-                Some(Either::Left(_cls)) => None,
-                Some(Either::Right(walker)) => Some(walker),
-                None => None,
+                Some(TypeWalker::Enum(walker)) => Some(walker),
+                _ => None,
             })
     }
 
@@ -178,9 +177,8 @@ impl<'db> ArgWalker<'db> {
         input
             .iter()
             .filter_map(|f| match self.db.find_type_by_str(f) {
-                Some(Either::Left(walker)) => Some(walker),
-                Some(Either::Right(_enm)) => None,
-                None => None,
+                Some(TypeWalker::Class(walker)) => Some(walker),
+                _ => None,
             })
     }
 }

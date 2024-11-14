@@ -39,7 +39,6 @@ mod types;
 use std::collections::{HashMap, HashSet};
 
 pub use coerce_expression::{coerce, coerce_array, coerce_opt};
-use either::Either;
 pub use internal_baml_schema_ast::ast;
 use internal_baml_schema_ast::ast::SchemaAst;
 pub use tarjan::Tarjan;
@@ -47,6 +46,7 @@ pub use types::{
     Attributes, ContantDelayStrategy, ExponentialBackoffStrategy, PrinterType, PromptAst,
     PromptVariable, RetryPolicy, RetryPolicyStrategy, StaticType,
 };
+pub use walkers::TypeWalker;
 
 use self::{context::Context, interner::StringId, types::Types};
 use internal_baml_diagnostics::{DatamodelError, Diagnostics};
@@ -157,8 +157,10 @@ impl ParserDatabase {
                 let deps =
                     HashSet::from_iter(deps.iter().filter_map(
                         |dep| match self.find_type_by_str(dep) {
-                            Some(Either::Left(cls)) => Some(cls.id),
-                            Some(Either::Right(_)) => None,
+                            Some(TypeWalker::Class(cls)) => Some(cls.id),
+                            Some(TypeWalker::Enum(_)) => None,
+                            // TODO: Does this interfere with recursive types?
+                            Some(TypeWalker::TypeAlias(_)) => todo!(),
                             None => panic!("Unknown class `{dep}`"),
                         },
                     ));
@@ -173,8 +175,8 @@ impl ParserDatabase {
             .map(|cycle| cycle.into_iter().collect())
             .collect();
 
-        // Additionally ensure the same thing for functions, but since we've already handled classes,
-        // this should be trivial.
+        // Additionally ensure the same thing for functions, but since we've
+        // already handled classes, this should be trivial.
         let extends = self
             .types
             .function
@@ -184,8 +186,11 @@ impl ParserDatabase {
                 let input_deps = input
                     .iter()
                     .filter_map(|f| match self.find_type_by_str(f) {
-                        Some(Either::Left(walker)) => Some(walker.dependencies().iter().cloned()),
-                        Some(Either::Right(_)) => None,
+                        Some(TypeWalker::Class(walker)) => {
+                            Some(walker.dependencies().iter().cloned())
+                        }
+                        Some(TypeWalker::Enum(_)) => None,
+                        Some(TypeWalker::TypeAlias(_)) => None,
                         _ => panic!("Unknown class `{}`", f),
                     })
                     .flatten()
@@ -194,8 +199,11 @@ impl ParserDatabase {
                 let output_deps = output
                     .iter()
                     .filter_map(|f| match self.find_type_by_str(f) {
-                        Some(Either::Left(walker)) => Some(walker.dependencies().iter().cloned()),
-                        Some(Either::Right(_)) => None,
+                        Some(TypeWalker::Class(walker)) => {
+                            Some(walker.dependencies().iter().cloned())
+                        }
+                        Some(TypeWalker::Enum(_)) => None,
+                        Some(TypeWalker::TypeAlias(_)) => todo!(),
                         _ => panic!("Unknown class `{}`", f),
                     })
                     .flatten()

@@ -1,8 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
-use either::Either;
 use internal_baml_diagnostics::DatamodelError;
-use internal_baml_parser_database::Tarjan;
+use internal_baml_parser_database::{Tarjan, TypeWalker};
 use internal_baml_schema_ast::ast::{FieldType, TypeExpId, WithName, WithSpan};
 
 use crate::validate::validation_pipeline::context::Context;
@@ -67,7 +66,7 @@ fn insert_required_deps(
 ) {
     match field {
         FieldType::Symbol(arity, ident, _) if arity.is_required() => {
-            if let Some(Either::Left(class)) = ctx.db.find_type_by_str(ident.name()) {
+            if let Some(TypeWalker::Class(class)) = ctx.db.find_type_by_str(ident.name()) {
                 deps.insert(class.id);
             }
         }

@@ -7,7 +7,7 @@ use crate::{
     types::FunctionType,
 };
 
-use super::{ClassWalker, ConfigurationWalker, EnumWalker, Walker};
+use super::{ClassWalker, ConfigurationWalker, EnumWalker, TypeWalker, Walker};
 
 use std::iter::ExactSizeIterator;
 
@@ -143,7 +143,10 @@ impl<'db> FunctionWalker<'db> {
         match client.0.split_once("/") {
             // TODO: do this in a more robust way
             // actually validate which clients are and aren't allowed
-            Some((provider, model)) => Ok(ClientSpec::Shorthand(provider.to_string(), model.to_string())),
+            Some((provider, model)) => Ok(ClientSpec::Shorthand(
+                provider.to_string(),
+                model.to_string(),
+            )),
             None => match self.db.find_client(client.0.as_str()) {
                 Some(client) => Ok(ClientSpec::Named(client.name().to_string())),
                 None => {
@@ -217,9 +220,8 @@ impl<'db> ArgWalker<'db> {
         if self.id.1 { input } else { output }
             .iter()
             .filter_map(|f| match self.db.find_type_by_str(f) {
-                Some(Either::Left(_cls)) => None,
-                Some(Either::Right(walker)) => Some(walker),
-                None => None,
+                Some(TypeWalker::Enum(walker)) => Some(walker),
+                _ => None,
             })
     }
 
@@ -229,9 +231,8 @@ impl<'db> ArgWalker<'db> {
         if self.id.1 { input } else { output }
             .iter()
             .filter_map(|f| match self.db.find_type_by_str(f) {
-                Some(Either::Left(walker)) => Some(walker),
-                Some(Either::Right(_enm)) => None,
-                None => None,
+                Some(TypeWalker::Class(walker)) => Some(walker),
+                _ => None,
             })
     }
 }

@@ -2,14 +2,13 @@ use std::collections::HashSet;
 
 use anyhow::{anyhow, Result};
 use baml_types::{Constraint, ConstraintLevel, FieldType};
-use either::Either;
 use indexmap::{IndexMap, IndexSet};
 use internal_baml_parser_database::{
     walkers::{
         ClassWalker, ClientSpec as AstClientSpec, ClientWalker, ConfigurationWalker,
         EnumValueWalker, EnumWalker, FieldWalker, FunctionWalker, TemplateStringWalker,
     },
-    Attributes, ParserDatabase, PromptAst, RetryPolicyStrategy,
+    Attributes, ParserDatabase, PromptAst, RetryPolicyStrategy, TypeWalker,
 };
 use internal_baml_schema_ast::ast::SubType;
 
@@ -413,7 +412,7 @@ impl WithRepr<FieldType> for ast::FieldType {
             }
             ast::FieldType::Symbol(arity, idn, ..) => type_with_arity(
                 match db.find_type(idn) {
-                    Some(Either::Left(class_walker)) => {
+                    Some(TypeWalker::Class(class_walker)) => {
                         let base_class = FieldType::Class(class_walker.name().to_string());
                         let maybe_constraints = class_walker.get_constraints(SubType::Class);
                         match maybe_constraints {
@@ -424,7 +423,7 @@ impl WithRepr<FieldType> for ast::FieldType {
                             _ => base_class,
                         }
                     }
-                    Some(Either::Right(enum_walker)) => {
+                    Some(TypeWalker::Enum(enum_walker)) => {
                         let base_type = FieldType::Enum(enum_walker.name().to_string());
                         let maybe_constraints = enum_walker.get_constraints(SubType::Enum);
                         match maybe_constraints {
@@ -435,6 +434,7 @@ impl WithRepr<FieldType> for ast::FieldType {
                             _ => base_type,
                         }
                     }
+                    Some(TypeWalker::TypeAlias(type_alias_walker)) => todo!(),
                     None => return Err(anyhow!("Field type uses unresolvable local identifier")),
                 },
                 arity,

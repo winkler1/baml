@@ -6,6 +6,7 @@
 //! - Know about relations.
 //! - Do not know anything about connectors, they are generic.
 
+mod alias;
 mod r#class;
 mod client;
 mod configuration;
@@ -14,16 +15,17 @@ mod field;
 mod function;
 mod template_string;
 
+use alias::TypeAliasWalker;
 use baml_types::TypeValue;
 pub use client::*;
 pub use configuration::*;
 use either::Either;
 pub use field::*;
-pub use function::{FunctionWalker, ClientSpec};
-pub use template_string::TemplateStringWalker;
+pub use function::{ClientSpec, FunctionWalker};
 use internal_baml_schema_ast::ast::{FieldType, Identifier, TopId, TypeExpId, WithName};
 pub use r#class::*;
 pub use r#enum::*;
+pub use template_string::TemplateStringWalker;
 
 /// A generic walker. Only walkers intantiated with a concrete ID type (`I`) are useful.
 #[derive(Clone, Copy)]
@@ -50,11 +52,21 @@ where
     }
 }
 
+/// Walker kind.
+pub enum TypeWalker<'db> {
+    /// Class walker.
+    Class(ClassWalker<'db>),
+    /// Enum walker.
+    Enum(EnumWalker<'db>),
+    /// Type alias walker.
+    TypeAlias(TypeAliasWalker<'db>),
+}
+
 impl<'db> crate::ParserDatabase {
     /// Find an enum by name.
     pub fn find_enum(&'db self, idn: &Identifier) -> Option<EnumWalker<'db>> {
         self.find_type(idn).and_then(|either| match either {
-            Either::Right(class) => Some(class),
+            TypeWalker::Enum(enm) => Some(enm),
             _ => None,
         })
     }
@@ -66,22 +78,19 @@ impl<'db> crate::ParserDatabase {
     }
 
     /// Find a type by name.
-    pub fn find_type_by_str(
-        &'db self,
-        name: &str,
-    ) -> Option<Either<ClassWalker<'db>, EnumWalker<'db>>> {
+    pub fn find_type_by_str(&'db self, name: &str) -> Option<TypeWalker<'db>> {
         self.find_top_by_str(name).and_then(|top_id| match top_id {
-            TopId::Class(class_id) => Some(Either::Left(self.walk(*class_id))),
-            TopId::Enum(enum_id) => Some(Either::Right(self.walk(*enum_id))),
+            TopId::Class(class_id) => Some(TypeWalker::Class(self.walk(*class_id))),
+            TopId::Enum(enum_id) => Some(TypeWalker::Enum(self.walk(*enum_id))),
+            TopId::TypeAlias(type_alias_id) => {
+                Some(TypeWalker::TypeAlias(self.walk(*type_alias_id)))
+            }
             _ => None,
         })
     }
 
     /// Find a type by name.
-    pub fn find_type(
-        &'db self,
-        idn: &Identifier,
-    ) -> Option<Either<ClassWalker<'db>, EnumWalker<'db>>> {
+    pub fn find_type(&'db self, idn: &Identifier) -> Option<TypeWalker<'db>> {
         match idn {
             Identifier::Local(local, _) => self.find_type_by_str(local),
             _ => None,
@@ -91,7 +100,7 @@ impl<'db> crate::ParserDatabase {
     /// Find a model by name.
     pub fn find_class(&'db self, idn: &Identifier) -> Option<ClassWalker<'db>> {
         self.find_type(idn).and_then(|either| match either {
-            Either::Left(class) => Some(class),
+            TypeWalker::Class(class) => Some(class),
             _ => None,
         })
     }
@@ -255,8 +264,9 @@ impl<'db> crate::ParserDatabase {
             FieldType::Symbol(arity, idn, ..) => {
                 let mut t = match self.find_type(idn) {
                     None => Type::Undefined,
-                    Some(Either::Left(_)) => Type::ClassRef(idn.to_string()),
-                    Some(Either::Right(_)) => Type::String,
+                    Some(TypeWalker::Class(_)) => Type::ClassRef(idn.to_string()),
+                    Some(TypeWalker::Enum(_)) => Type::String,
+                    Some(TypeWalker::TypeAlias(_)) => Type::String,
                 };
                 if arity.is_optional() {
                     t = Type::None | t;
