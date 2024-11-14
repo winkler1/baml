@@ -36,7 +36,7 @@ impl Top {
             Top::Enum(_) => "enum",
             Top::Class(_) => "class",
             Top::Function(_) => "function",
-            Top::TypeAlias(_) => "type",
+            Top::TypeAlias(_) => "type_alias",
             Top::Client(_) => "client<llm>",
             Top::TemplateString(_) => "template_string",
             Top::Generator(_) => "generator",

@@ -14,3 +14,9 @@ typpe Two = float
 //  8 | // Unexpected keyword.
 //  9 | typpe Two = float
 //    | 
+// error: The type_alias "One" cannot be defined because a class with that name already exists.
+//   -->  class/invalid_type_aliases.baml:6
+//    | 
+//  5 | // Already existing name.
+//  6 | type One = int
+//    | 

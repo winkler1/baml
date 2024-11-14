@@ -32,8 +32,8 @@ impl WithSpan for Assignment {
     }
 }
 
-// TODO: Right now the left side is always an identifier, but if ends up being
-// an expression we'll have to refactor this somehow.
+// TODO: Right now the left side is always an identifier, but if it ends up
+// being an expression we'll have to refactor this somehow.
 impl WithIdentifier for Assignment {
     fn identifier(&self) -> &Identifier {
         &self.identifier

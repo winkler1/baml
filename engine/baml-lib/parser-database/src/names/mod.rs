@@ -33,7 +33,7 @@ pub(super) struct Names {
 /// - Generators
 /// - Model fields for each model
 pub(super) fn resolve_names(ctx: &mut Context<'_>) {
-    let mut tmp_names: HashSet<&str> = HashSet::default(); // throwaway container for duplicate checking
+    let mut enum_value_names: HashSet<&str> = HashSet::default(); // throwaway container for duplicate checking
     let mut names = Names::default();
 
     for (top_id, top) in ctx.ast.iter_tops() {
@@ -41,7 +41,7 @@ pub(super) fn resolve_names(ctx: &mut Context<'_>) {
 
         let namespace = match (top_id, top) {
             (_, ast::Top::Enum(ast_enum)) => {
-                tmp_names.clear();
+                enum_value_names.clear();
                 validate_enum_name(ast_enum, ctx.diagnostics);
                 validate_attribute_identifiers(ast_enum, ctx);
 
@@ -50,7 +50,7 @@ pub(super) fn resolve_names(ctx: &mut Context<'_>) {
 
                     validate_attribute_identifiers(value, ctx);
 
-                    if !tmp_names.insert(value.name()) {
+                    if !enum_value_names.insert(value.name()) {
                         ctx.push_error(DatamodelError::new_duplicate_enum_value_error(
                             ast_enum.name.name(),
                             value.name(),
@@ -90,6 +90,17 @@ pub(super) fn resolve_names(ctx: &mut Context<'_>) {
             (_, ast::Top::Class(_)) => {
                 unreachable!("Encountered impossible class declaration during parsing")
             }
+
+            (ast::TopId::TypeAlias(_), ast::Top::TypeAlias(type_alias)) => {
+                validate_type_alias_name(type_alias, ctx.diagnostics);
+
+                Some(either::Left(&mut names.tops))
+            }
+
+            (_, ast::Top::TypeAlias(_)) => {
+                unreachable!("Encountered impossible type alias declaration during parsing")
+            }
+
             (ast::TopId::TemplateString(_), ast::Top::TemplateString(template_string)) => {
                 validate_template_string_name(template_string, ctx.diagnostics);
                 validate_attribute_identifiers(template_string, ctx);
@@ -136,13 +147,13 @@ pub(super) fn resolve_names(ctx: &mut Context<'_>) {
 
             (_, ast::Top::Generator(generator)) => {
                 validate_generator_name(generator, ctx.diagnostics);
-                check_for_duplicate_properties(top, generator.fields(), &mut tmp_names, ctx);
+                check_for_duplicate_properties(top, generator.fields(), &mut enum_value_names, ctx);
                 Some(either::Left(&mut names.generators))
             }
 
             (ast::TopId::TestCase(testcase_id), ast::Top::TestCase(testcase)) => {
                 validate_test(testcase, ctx.diagnostics);
-                check_for_duplicate_properties(top, testcase.fields(), &mut tmp_names, ctx);
+                check_for_duplicate_properties(top, testcase.fields(), &mut enum_value_names, ctx);
 
                 // TODO: I think we should do this later after all parsing, as duplication
                 // would work best as a validation error with walkers.

@@ -37,13 +37,14 @@ pub use value_expression_block::{BlockArg, BlockArgs, ValueExprBlock, ValueExprB
 
 /// AST representation of a prisma schema.
 ///
-/// This module is used internally to represent an AST. The AST's nodes can be used
-/// during validation of a schema, especially when implementing custom attributes.
+/// This module is used internally to represent an AST. The AST's nodes can be
+/// used during validation of a schema, especially when implementing custom
+/// attributes.
 ///
-/// The AST is not validated, also fields and attributes are not resolved. Every node is
-/// annotated with its location in the text representation.
-/// Basically, the AST is an object oriented representation of the datamodel's text.
-/// Schema = Datamodel + Generators + Datasources
+/// The AST is not validated, also fields and attributes are not resolved. Every
+/// node is annotated with its location in the text representation.
+/// Basically, the AST is an object oriented representation of the datamodel's
+/// text. Schema = Datamodel + Generators + Datasources
 #[derive(Debug)]
 pub struct SchemaAst {
     /// All models, enums, composite types, datasources, generators and type aliases.
