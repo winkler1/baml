@@ -43,7 +43,7 @@ impl std::ops::Index<ArgumentId> for BlockArg {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct BlockArg {
     /// The field's type.
     pub field_type: FieldType,
@@ -57,7 +57,7 @@ impl BlockArg {
         self.field_type.name()
     }
 }
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct BlockArgs {
     pub(crate) documentation: Option<Comment>,
     pub args: Vec<(Identifier, BlockArg)>,
@@ -108,7 +108,7 @@ impl BlockArgs {
 
 /// A block declaration.
 /// A complete Function, Client, Generator, Test, or RetryPolicy.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct ValueExprBlock {
     /// The name of the block.
     ///

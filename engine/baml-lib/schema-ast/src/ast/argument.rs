@@ -22,7 +22,7 @@ impl std::ops::Index<ArgumentId> for ArgumentsList {
 }
 
 /// A list of arguments inside parentheses.
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default)]
 pub struct ArgumentsList {
     /// The arguments themselves.
     ///
@@ -43,7 +43,7 @@ impl ArgumentsList {
 }
 
 /// An argument, either for attributes or for function call expressions.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Argument {
     /// The argument value.
     ///

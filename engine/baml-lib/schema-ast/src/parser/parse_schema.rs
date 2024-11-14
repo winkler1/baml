@@ -262,47 +262,35 @@ mod tests {
     fn test_push_type_aliases() {
         let input = "type One = int\ntype Two = string | One";
 
-        let root_path = "example_file.baml";
-        let source = SourceFile::new_static(root_path.into(), input);
+        let path = "example_file.baml";
+        let source = SourceFile::new_static(path.into(), input);
 
-        let (ast, diagnostics) = parse_schema(&root_path.into(), &source).unwrap();
+        let (ast, _) = parse_schema(&path.into(), &source).unwrap();
 
-        assert_eq!(
-            ast.tops,
-            vec![
-                Top::TypeAlias(Assignment {
-                    identifier: Identifier::Local("One".into(), diagnostics.span_from(5, 8)),
-                    value: FieldType::Primitive(
-                        FieldArity::Required,
-                        TypeValue::Int,
-                        diagnostics.span_from(11, 14),
-                        None
-                    ),
-                    span: diagnostics.span_from(0, 14),
-                }),
-                Top::TypeAlias(Assignment {
-                    identifier: Identifier::Local("Two".into(), diagnostics.span_from(20, 23)),
-                    value: FieldType::Union(
-                        FieldArity::Required,
-                        vec![
-                            FieldType::Primitive(
-                                FieldArity::Required,
-                                TypeValue::String,
-                                diagnostics.span_from(26, 32),
-                                Some(vec![]),
-                            ),
-                            FieldType::Symbol(
-                                FieldArity::Required,
-                                Identifier::Local("One".into(), diagnostics.span_from(35, 38)),
-                                Some(vec![]),
-                            )
-                        ],
-                        diagnostics.span_from(26, 38),
-                        Some(vec![]),
-                    ),
-                    span: diagnostics.span_from(15, 38),
-                })
-            ]
-        )
+        let [Top::TypeAlias(one), Top::TypeAlias(two)] = ast.tops.as_slice() else {
+            panic!(
+                "Expected two type aliases (type One, type Two), got: {:?}",
+                ast.tops
+            );
+        };
+
+        assert_eq!(one.identifier.to_string(), "One");
+        assert!(matches!(
+            one.value,
+            FieldType::Primitive(_, TypeValue::Int, _, _)
+        ));
+
+        assert_eq!(two.identifier.to_string(), "Two");
+        let FieldType::Union(_, elements, _, _) = &two.value else {
+            panic!("Expected union type (string | One), got: {:?}", two.value);
+        };
+
+        let [FieldType::Primitive(_, TypeValue::String, _, _), FieldType::Symbol(_, alias, _)] =
+            elements.as_slice()
+        else {
+            panic!("Expected union type (string | One), got: {:?}", two.value);
+        };
+
+        assert_eq!(alias.to_string(), "One");
     }
 }

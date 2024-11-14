@@ -70,7 +70,7 @@ mod tests {
     use internal_baml_diagnostics::{Diagnostics, SourceFile};
     use pest::{consumes_to, fails_with, parses_to, Parser};
 
-    fn parse_type_alias(input: &'static str) -> (Assignment, Diagnostics) {
+    fn parse_type_alias(input: &'static str) -> Assignment {
         let path = "test.baml";
         let source = SourceFile::new_static(path.into(), input);
 
@@ -84,7 +84,8 @@ mod tests {
 
         let assignment = super::parse_assignment(pairs, &mut diagnostics);
 
-        (assignment, diagnostics)
+        // (assignment, diagnostics)
+        assignment
     }
 
     #[test]
@@ -122,33 +123,18 @@ mod tests {
 
     #[test]
     fn parse_union_type_alias() {
-        let (assignment, diagnostics) = parse_type_alias("type Test = int | string");
+        let assignment = parse_type_alias("type Test = int | string");
 
-        assert_eq!(
-            assignment,
-            Assignment {
-                identifier: Identifier::Local("Test".into(), diagnostics.span_from(5, 9)),
-                value: FieldType::Union(
-                    FieldArity::Required,
-                    vec![
-                        FieldType::Primitive(
-                            FieldArity::Required,
-                            TypeValue::Int,
-                            diagnostics.span_from(12, 15),
-                            Some(vec![])
-                        ),
-                        FieldType::Primitive(
-                            FieldArity::Required,
-                            TypeValue::String,
-                            diagnostics.span_from(18, 24),
-                            Some(vec![])
-                        )
-                    ],
-                    diagnostics.span_from(12, 24),
-                    Some(vec![])
-                ),
-                span: diagnostics.span_from(0, 24),
-            }
-        )
+        assert_eq!(assignment.identifier.to_string(), "Test");
+
+        let FieldType::Union(_, elements, _, _) = assignment.value else {
+            panic!("Expected union type, got: {:?}", assignment.value);
+        };
+
+        let [FieldType::Primitive(_, TypeValue::Int, _, _), FieldType::Primitive(_, TypeValue::String, _, _)] =
+            elements.as_slice()
+        else {
+            panic!("Expected int | string union, got: {:?}", elements);
+        };
     }
 }

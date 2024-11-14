@@ -3,7 +3,7 @@ use std::ops::Index;
 
 /// An attribute (following `@` or `@@``) on a model, model field, enum, enum value or composite
 /// type field.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Attribute {
     /// The name of the attribute:
     ///

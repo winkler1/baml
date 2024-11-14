@@ -7,7 +7,7 @@ use super::{
 };
 
 /// A field definition in a model or a composite type.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Field<T> {
     /// The field's type.
     ///
@@ -109,7 +109,7 @@ impl FieldArity {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum FieldType {
     Symbol(FieldArity, Identifier, Option<Vec<Attribute>>),
     Primitive(FieldArity, TypeValue, Span, Option<Vec<Attribute>>),

@@ -8,7 +8,7 @@ use super::{
 };
 
 /// Assignment expression. `left = right`.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Assignment {
     /// Left side of the assignment.
     ///

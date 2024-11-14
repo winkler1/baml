@@ -6,7 +6,7 @@ use std::fmt;
 use super::{Identifier, WithName, WithSpan};
 use baml_types::JinjaExpression;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct RawString {
     raw_span: Span,
     #[allow(dead_code)]
@@ -144,7 +144,7 @@ impl RawString {
 }
 
 /// Represents arbitrary, even nested, expressions.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum Expression {
     /// Boolean values aka true or false
     BoolValue(bool, Span),

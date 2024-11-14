@@ -4,7 +4,7 @@ use super::{
 };
 
 /// Enum for distinguishing between top-level entries
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum Top {
     /// An enum declaration.
     Enum(TypeExpressionBlock),
