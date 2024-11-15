@@ -121,7 +121,9 @@ pub fn parse_schema(
                             // Some(Rule::enum_declaration) => {
                             //     pending_block_comment = Some(current);
                             // }
-                            _ => (),
+                            _ => {
+                                pending_block_comment = Some(current);
+                            }
                         }
                     }
                     // We do nothing here.
@@ -243,6 +245,58 @@ mod tests {
 
         let result = parse_schema(&root_path.into(), &source).unwrap();
         assert_eq!(result.1.errors().len(), 0);
+    }
+
+    #[test]
+    fn test_comments() {
+        let input = r##"
+          /// Doc comment for Foo
+          /// has multiple lines
+          class Foo {
+            /// A nice bar.
+            bar int
+
+            /// Followed by a
+            /// multiline baz.
+            baz string
+          }
+        "##;
+        let root_path = "a.baml";
+        let source = SourceFile::new_static(root_path.into(), input);
+        let schema = parse_schema(&root_path.into(), &source).unwrap().0;
+        let foo_top = schema.iter_tops().next().unwrap().1;
+        match foo_top {
+            Top::Class(TypeExpressionBlock {
+                name,
+                fields,
+                documentation,
+                ..
+            }) => {
+                assert_eq!(name.to_string().as_str(), "Foo");
+                assert_eq!(
+                    documentation.as_ref().unwrap().text.as_str(),
+                    "Doc comment for Foo\nhas multiple lines"
+                );
+                match fields.as_slice() {
+                    [field1, field2] => {
+                        assert_eq!(
+                            field1.documentation.as_ref().unwrap().text.as_str(),
+                            "A nice bar."
+                        );
+                        assert_eq!(
+                            field2.documentation.as_ref().unwrap().text.as_str(),
+                            "Followed by a\nmultiline baz."
+                        );
+                    }
+                    _ => {
+                        panic!("Expected exactly 2 fields");
+                    }
+                }
+            }
+            _ => {
+                panic!("Expected class.")
+            }
+        }
     }
 }
 

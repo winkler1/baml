@@ -685,6 +685,7 @@ impl WithRepr<Enum> for EnumWalker<'_> {
 pub struct Field {
     pub name: String,
     pub r#type: Node<FieldType>,
+    pub docstring: String,
 }
 
 impl WithRepr<Field> for FieldWalker<'_> {
@@ -731,6 +732,9 @@ pub struct Class {
 
     /// Parameters to the class definition.
     pub inputs: Vec<(String, FieldType)>,
+
+    /// Doc comments.
+    pub doc_comments: String,
 }
 
 impl WithRepr<Class> for ClassWalker<'_> {
